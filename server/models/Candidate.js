@@ -11,6 +11,13 @@ const interviewEntrySchema = new mongoose.Schema({
 
 const candidateSchema = new mongoose.Schema(
   {
+    // --- THIS IS THE CRITICAL FIELD ---
+    // This links the interview session to a specific user (either an individual or a recruiter)
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: 'User', // This creates a reference to our User model
+    },
     name: { type: String },
     email: {
       type: String,
@@ -25,20 +32,16 @@ const candidateSchema = new mongoose.Schema(
       enum: ['pending', 'in-progress', 'completed'],
       default: 'pending',
     },
-    role: {
-      type: String,
-      required: true,
-    },
+    role: { type: String, required: true },
     finalScore: { type: Number, default: 0 },
     summary: { type: String },
     insights: {
       strengths: { type: [String], default: [] },
       weaknesses: { type: [String], default: [] },
     },
-    // --- THIS IS THE NEW FIELD ---
     recommendation: {
-      verdict: { type: String }, // e.g., "Strong Hire", "Hire", etc.
-      justification: { type: String }, // The AI's reasoning.
+      verdict: { type: String },
+      justification: { type: String },
     },
     interviewHistory: [interviewEntrySchema],
   },

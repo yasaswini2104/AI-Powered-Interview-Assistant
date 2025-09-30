@@ -1,24 +1,36 @@
-// client\src\components\IntervieweeView.tsx
 import { useSelector } from 'react-redux';
 import { type RootState } from '@/app/store';
 import { ResumeUploadForm } from './ResumeUploadForm';
 import { MissingInfoForm } from './MissingInfoForm';
-import { ChatWindow } from './ChatWindow'; 
+import { ChatWindow } from './ChatWindow';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 
-export function IntervieweeView() {
+interface IntervieweeViewProps {
+  isPublicSession: boolean;
+  sessionId?: string;
+  publicRole?: string;
+}
+
+export function IntervieweeView({ isPublicSession, sessionId, publicRole }: IntervieweeViewProps) {
   const interviewStatus = useSelector((state: RootState) => state.interview.status);
 
   const renderContent = () => {
     switch (interviewStatus) {
       case 'idle':
-        return <ResumeUploadForm />;
+        return <ResumeUploadForm 
+                  isPublicSession={isPublicSession} 
+                  sessionId={sessionId} 
+                  publicRole={publicRole}
+                />;
+      
       case 'pending-info':
         return <MissingInfoForm />;
+        
       case 'in-progress':
-      case 'loading': // Show chat window during loading as well
-        return <ChatWindow />; // <-- REPLACE THE <p> TAG
+      case 'loading':
+        return <ChatWindow />;
+
       case 'completed':
         return (
           <Card className="w-full max-w-lg mx-auto text-center">
@@ -31,21 +43,22 @@ export function IntervieweeView() {
             </CardHeader>
             <CardContent>
               <p className="text-slate-600">
-                We have received your responses. The hiring team will review your session and get back to you with the next steps if you are a good fit.
+                Your responses have been submitted. The hiring team will be in touch with the next steps.
               </p>
             </CardContent>
           </Card>
         );
 
       case 'error':
-        return <p>An error occurred. Please refresh and try again.</p>;
+        return <p className="text-red-600">An error occurred. Please refresh and try again.</p>;
+        
       default:
-        return <ResumeUploadForm />;
+        return <ResumeUploadForm isPublicSession={isPublicSession} sessionId={sessionId} publicRole={publicRole} />;
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 min-h-[70vh]">
+    <div className="flex flex-col items-center justify-center p-4">
       {renderContent()}
     </div>
   );

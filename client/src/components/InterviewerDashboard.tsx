@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, AlertCircle, Eye, ArrowUpDown, Download, Mail } from 'lucide-react';
+import { Loader2, AlertCircle, Eye, ArrowUpDown, Download, Mail, Info } from 'lucide-react';
 import { CandidateDetailsModal } from './CandidateDetailsModal';
 import { generateAndDownloadPdf } from '../lib/pdfGenerator';
 import { toast } from 'sonner';
@@ -15,15 +15,50 @@ import { toast } from 'sonner';
 export function InterviewerDashboard() {
   const dispatch = useDispatch<AppDispatch>();
   const { candidates, status, error } = useSelector((state: RootState) => state.candidates);
+  const { userInfo } = useSelector((state: RootState) => state.auth);
+  const interviewState = useSelector((state: RootState) => state.interview);
   
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Candidate; direction: 'asc' | 'desc' } | null>({ key: 'finalScore', direction: 'desc' });
+  type SortableKeys = 'name' | 'email' | 'role' | 'finalScore' | 'createdAt';
+  const [sortConfig, setSortConfig] = useState<{ key: SortableKeys; direction: 'asc' | 'desc' } | null>({ key: 'createdAt', direction: 'desc' });
 
+  // DUAL MODE SUPPORT
+  const isTrialMode = !userInfo;
+  
   useEffect(() => {
-    if (status === 'idle') dispatch(fetchAllCandidates());
-  }, [status, dispatch]);
+    if (userInfo) {
+      dispatch(fetchAllCandidates());
+    }
+  }, [dispatch, userInfo]);
+
+  // In trial mode, show the local completed interview from Redux state
+  const trialModeCandidate = useMemo(() => {
+    if (isTrialMode && interviewState.status === 'completed' && interviewState.candidateId) {
+      // Convert the interview state into a Candidate object
+      return {
+        _id: interviewState.candidateId,
+        name: interviewState.name || 'Trial User',
+        email: interviewState.email || 'N/A',
+        role: interviewState.role,
+        finalScore: 0, 
+        summary: 'Trial mode - data stored locally',
+        status: 'completed' as const,
+        interviewHistory: interviewState.history,
+        insights: { strengths: [], weaknesses: [] },
+        createdAt: new Date().toISOString(),
+      };
+    }
+    return null;
+  }, [isTrialMode, interviewState]);
+
+  const allCandidates = useMemo(() => {
+    if (isTrialMode && trialModeCandidate) {
+      return [trialModeCandidate];
+    }
+    return candidates;
+  }, [isTrialMode, trialModeCandidate, candidates]);
   
   const handleDownload = async (candidate: Candidate) => {
     setIsDownloading(candidate._id);
@@ -39,7 +74,7 @@ export function InterviewerDashboard() {
   };
 
   const filteredAndSortedCandidates = useMemo(() => {
-    let sortableItems = [...candidates];
+    let sortableItems = [...allCandidates];
     if (searchTerm) {
         sortableItems = sortableItems.filter(c => 
             (c.name && c.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -47,13 +82,19 @@ export function InterviewerDashboard() {
         );
     }
     if (sortConfig) {
-      // --- THIS IS THE FIX ---
-      // This new sorting logic is fully type-safe and handles undefined values.
       sortableItems.sort((a, b) => {
-        const aValue = a[sortConfig.key];
-        const bValue = b[sortConfig.key];
+        const key = sortConfig.key;
+        let aValue: string | number | undefined;
+        let bValue: string | number | undefined;
 
-        // Treat null or undefined values as "smaller"
+        if (key === 'name' || key === 'email' || key === 'role' || key === 'createdAt') {
+          aValue = a[key];
+          bValue = b[key];
+        } else if (key === 'finalScore') {
+          aValue = a.finalScore;
+          bValue = b.finalScore;
+        }
+
         if (aValue == null) return -1;
         if (bValue == null) return 1;
 
@@ -67,9 +108,9 @@ export function InterviewerDashboard() {
       });
     }
     return sortableItems;
-  }, [candidates, searchTerm, sortConfig]);
+  }, [allCandidates, searchTerm, sortConfig]);
 
-  const requestSort = (key: keyof Candidate) => {
+  const requestSort = (key: SortableKeys) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
       direction = 'desc';
@@ -77,24 +118,47 @@ export function InterviewerDashboard() {
     setSortConfig({ key, direction });
   };
   
-  const renderSortArrow = (key: keyof Candidate) => {
+  const renderSortArrow = (key: SortableKeys) => {
     if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="h-4 w-4 ml-2 opacity-20"/>;
     return sortConfig.direction === 'asc' ? '🔼' : '🔽';
   }
 
+  const isRecruiter = userInfo?.role === 'recruiter';
+  const cardTitle = isTrialMode ? "Interview Dashboard (Trial Mode)" : (isRecruiter ? "Candidate Dashboard" : "My Interview History");
+  const cardDescription = isTrialMode 
+    ? "Your interview data is stored locally in your browser. Sign up to save across devices." 
+    : (isRecruiter ? "Review and manage all candidate interviews." : "Review your past practice interview sessions.");
+  const nameColumnTitle = isRecruiter ? "Candidate Name" : "My Name";
+
   const renderContent = () => {
-    if (status === 'loading') return <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    if (status === 'failed') return <div className="flex flex-col items-center justify-center h-48 text-red-600"><AlertCircle className="h-8 w-8 mb-2" /><p>Failed to load candidates: {error}</p></div>;
-    if (status === 'succeeded' && filteredAndSortedCandidates.length === 0) return <div className="text-center h-48 flex items-center justify-center"><p>No candidates found.</p></div>;
+    // In trial mode, don't show loading state from server
+    if (!isTrialMode && status === 'loading') {
+      return <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
+    
+    if (!isTrialMode && status === 'failed') {
+      return <div className="flex flex-col items-center justify-center h-48 text-red-600"><AlertCircle className="h-8 w-8 mb-2" /><p>Failed to load data: {error}</p></div>;
+    }
+    
+    if (filteredAndSortedCandidates.length === 0) {
+      return (
+        <div className="text-center h-48 flex flex-col items-center justify-center gap-2">
+          <p>No interviews found.</p>
+          {isTrialMode && (
+            <p className="text-sm text-slate-500">Complete an interview in the "Interviewee (Chat)" tab to see results here.</p>
+          )}
+        </div>
+      );
+    }
 
     return (
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="cursor-pointer" onClick={() => requestSort('name')}>
-                <div className="flex items-center">Name {renderSortArrow('name')}</div>
+                <div className="flex items-center">{nameColumnTitle} {renderSortArrow('name')}</div>
             </TableHead>
-            <TableHead>Summary</TableHead>
+            <TableHead>AI Summary</TableHead>
             <TableHead className="cursor-pointer" onClick={() => requestSort('finalScore')}>
                 <div className="flex items-center">Score {renderSortArrow('finalScore')}</div>
             </TableHead>
@@ -113,7 +177,7 @@ export function InterviewerDashboard() {
                     <Button variant="outline" size="icon" onClick={() => handleDownload(candidate)} disabled={isDownloading === candidate._id}>
                         {isDownloading === candidate._id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                     </Button>
-                    {candidate.email && (
+                    {!isTrialMode && isRecruiter && candidate.email && (
                         <a href={`mailto:${candidate.email}?subject=Interview Follow-up`}>
                             <Button variant="outline" size="icon"><Mail className="h-4 w-4" /></Button>
                         </a>
@@ -131,17 +195,23 @@ export function InterviewerDashboard() {
     <>
       <Card>
           <CardHeader>
-              <CardTitle>Candidate Dashboard</CardTitle>
-              <CardDescription>Review and manage all completed interviews.</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{cardTitle}</CardTitle>
+                  <CardDescription>{cardDescription}</CardDescription>
+                </div>
+                {isTrialMode && (
+                  <div className="flex items-center gap-2 text-blue-600 text-sm">
+                    <Info className="h-4 w-4" />
+                    <span>Local Data Only</span>
+                  </div>
+                )}
+              </div>
               <div className="mt-4"><Input placeholder="Search by name or email..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
           </CardHeader>
           <CardContent>{renderContent()}</CardContent>
       </Card>
-      <CandidateDetailsModal 
-        candidate={selectedCandidate} 
-        onClose={() => setSelectedCandidate(null)} 
-      />
+      <CandidateDetailsModal candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
     </>
   );
 }
-

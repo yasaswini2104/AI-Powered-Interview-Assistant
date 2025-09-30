@@ -1,11 +1,11 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { fetchQuestion, submitAnswer, completeInterview } from './interviewThunks';
 
-// Interfaces for the slice's state
 interface InterviewEntry {
   question: string;
   answer?: string;
   feedback?: string;
+  score?: number; 
 }
 interface CandidatePayload {
   _id: string;
@@ -27,8 +27,15 @@ interface InterviewState {
 }
 
 const initialState: InterviewState = {
-  candidateId: null, status: 'idle', name: null, email: null, phone: null,
-  role: 'Full Stack Developer', history: [], currentQuestionIndex: 0, error: null,
+  candidateId: null, 
+  status: 'idle', 
+  name: null, 
+  email: null, 
+  phone: null,
+  role: 'Full Stack Developer', 
+  history: [], 
+  currentQuestionIndex: 0, 
+  error: null,
 };
 
 const interviewSlice = createSlice({
@@ -57,29 +64,38 @@ const interviewSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchQuestion.pending, (state) => { state.status = 'loading'; state.error = null; })
+      .addCase(fetchQuestion.pending, (state) => { 
+        state.status = 'loading'; 
+        state.error = null; 
+      })
       .addCase(fetchQuestion.fulfilled, (state, action) => {
         state.history.push({ question: action.payload.question });
         state.status = 'in-progress';
       })
-      .addCase(fetchQuestion.rejected, (state, action) => { state.status = 'error'; state.error = action.payload as string; })
-      .addCase(submitAnswer.pending, (state) => { state.status = 'loading'; })
+      .addCase(fetchQuestion.rejected, (state, action) => { 
+        state.status = 'error'; 
+        state.error = action.payload as string; 
+      })
+      .addCase(submitAnswer.pending, (state) => { 
+        state.status = 'loading'; 
+      })
       .addCase(submitAnswer.fulfilled, (state, action) => {
         const lastEntry = state.history.find(h => !h.answer);
         if (lastEntry) {
           lastEntry.answer = action.meta.arg;
           lastEntry.feedback = action.payload.feedback;
+          lastEntry.score = action.payload.score; 
         }
         state.currentQuestionIndex += 1;
         state.status = 'in-progress';
       })
-      .addCase(submitAnswer.rejected, (state, action) => { state.status = 'error'; state.error = action.payload as string; })
+      .addCase(submitAnswer.rejected, (state, action) => { 
+        state.status = 'error'; 
+        state.error = action.payload as string; 
+      })
       .addCase(completeInterview.pending, (state) => {
         state.status = 'loading';
       })
-      // --- THIS IS THE FIX ---
-      // When the interview is successfully completed, we temporarily set the status to 'completed'
-      // This allows the success screen to be shown for one render cycle.
       .addCase(completeInterview.fulfilled, (state) => {
         state.status = 'completed';
       })
@@ -92,4 +108,3 @@ const interviewSlice = createSlice({
 
 export const { startInterviewSuccess, updateInfoSuccess, clearInterviewState } = interviewSlice.actions;
 export default interviewSlice.reducer;
-

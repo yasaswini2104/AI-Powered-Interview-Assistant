@@ -1,10 +1,9 @@
-// client\src\components\InterviewTimer.tsx
 import { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Clock } from 'lucide-react';
 
 interface InterviewTimerProps {
-  duration: number; // Duration in seconds
+  duration: number;
   onTimeUp: () => void;
 }
 
@@ -21,7 +20,7 @@ export function InterviewTimer({ duration, onTimeUp }: InterviewTimerProps) {
       setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    return () => clearInterval(intervalId); 
   }, [timeLeft, onTimeUp]);
 
   const progress = (timeLeft / duration) * 100;

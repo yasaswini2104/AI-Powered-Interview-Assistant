@@ -1,10 +1,8 @@
-// client\src\components\CandidateReportPDF.tsx
 import { type Candidate } from '../features/candidatesSlice';
 
 export function CandidateReportPDF({ candidate }: { candidate: Candidate }) {
   if (!candidate) return null;
 
-  // These simple, universal styles are guaranteed to work with html2canvas.
   const styles = {
     page: { width: '210mm', minHeight: '297mm', padding: '20mm', color: '#333', backgroundColor: '#fff', fontSize: '12px', lineHeight: '1.6', fontFamily: 'Arial, sans-serif' },
     header: { borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' },

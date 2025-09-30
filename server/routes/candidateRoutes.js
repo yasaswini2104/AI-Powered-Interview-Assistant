@@ -1,20 +1,22 @@
-// server\routes\candidateRoutes.js
 import express from 'express';
-// FIX 1: Import all three required functions, including startInterview
-import { getCandidates, updateCandidateDetails, startInterview } from '../controllers/candidateController.js';
-// FIX 2: Import the upload middleware
+import { 
+    getCandidates,
+    getCandidateById, 
+    updateCandidateDetails, 
+    startInterview,
+    startPublicInterview 
+} from '../controllers/candidateController.js';
 import { uploadResume } from '../middleware/uploadMiddleware.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// FIX 3: Connect the GET /api/candidates route
-router.route('/').get(getCandidates);
+router.route('/').get(protect, getCandidates);
+router.route('/start').post(protect, uploadResume, startInterview);
+router.route('/:id').get(protect, getCandidateById);
+router.route('/:id').patch(protect, updateCandidateDetails);
 
-// FIX 4: Connect the POST /api/candidates/start route for resume uploads
-router.route('/start').post(uploadResume, startInterview);
-
-// FIX 5: Connect the PATCH /api/candidates/:id route for updates
-router.route('/:id').patch(updateCandidateDetails); 
+// Public route for candidates using recruiter's link
+router.route('/start/public').post(uploadResume, startPublicInterview);
 
 export default router;
-

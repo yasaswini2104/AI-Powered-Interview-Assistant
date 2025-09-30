@@ -1,4 +1,3 @@
-// client\src\components\CandidateDetailsModal.tsx
 import { type Candidate } from '../features/candidatesSlice';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +9,6 @@ interface CandidateDetailsModalProps {
   onClose: () => void;
 }
 
-// Helper to get a color and icon for the verdict
 const getVerdictTheme = (verdict = '') => {
     switch (verdict) {
         case 'Strong Hire': return { color: 'bg-green-600', icon: <Check className="h-4 w-4" /> };
@@ -42,8 +40,6 @@ export function CandidateDetailsModal({ candidate, onClose }: CandidateDetailsMo
           </DialogDescription>
         </DialogHeader>
         
-        {/* --- THIS IS THE FIX --- */}
-        {/* We have only ONE scrolling container for all the content. */}
         <div className="flex-1 overflow-y-auto mt-4 pr-4 space-y-4">
             {/* Display the new recommendation */}
             {candidate.recommendation && (

@@ -1,4 +1,3 @@
-// client\src\components\MissingInfoForm.tsx
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -13,10 +12,13 @@ import { isAxiosError } from 'axios';
 
 export function MissingInfoForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const { candidateId, name, email, phone } = useSelector((state: RootState) => state.interview);
+  const { candidateId, name, email, phone, role } = useSelector((state: RootState) => state.interview);
+  const { userInfo } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({ name: name || '', email: email || '', phone: phone || '' });
   const [isLoading, setIsLoading] = useState(false);
+
+  const isTrialMode = !userInfo && candidateId?.startsWith('trial-');
 
   useEffect(() => {
     setFormData({ name: name || '', email: email || '', phone: phone || '' });
@@ -31,13 +33,19 @@ export function MissingInfoForm() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.patch(`/candidates/${candidateId}`, formData);
-
-      // --- THIS IS THE FIX ---
-      // We are also dispatching the 'candidate' object from inside this response.
-      dispatch(updateInfoSuccess(response.data.candidate));
-      
-      toast.success("Information saved!", { description: "Your interview will now begin." });
+      if (isTrialMode) {
+        await new Promise(resolve => setTimeout(resolve, 500)); 
+        dispatch(updateInfoSuccess({
+          _id: candidateId!,
+          ...formData,
+          role
+        }));
+        toast.success("Information saved!", { description: "Your trial interview will now begin." });
+      } else {
+        const response = await apiClient.patch(`/candidates/${candidateId}`, formData);
+        dispatch(updateInfoSuccess(response.data.candidate));
+        toast.success("Information saved!", { description: "Your interview will now begin." });
+      }
     } catch (error) {
       console.error('Update failed:', error);
       let errorMessage = 'An unexpected error occurred.';
@@ -54,7 +62,11 @@ export function MissingInfoForm() {
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
-        <CardDescription>Please fill in the missing details to proceed.</CardDescription>
+        <CardDescription>
+          {isTrialMode 
+            ? "Fill in your details to continue the trial interview." 
+            : "Please fill in the missing details to proceed."}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,4 +97,3 @@ export function MissingInfoForm() {
     </Card>
   );
 }
-

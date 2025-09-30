@@ -1,4 +1,3 @@
-// client\src\components\AnswerInput.tsx
 import { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea'; 
 import { Button } from '@/components/ui/button';
@@ -12,12 +11,11 @@ interface AnswerInputProps {
 export function AnswerInput({ onSubmit, isLoading }: AnswerInputProps) {
   const [answer, setAnswer] = useState('');
 
-  // Ensure event is properly typed
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (answer.trim()) {
       onSubmit(answer);
-      setAnswer(''); // Clear input after submission
+      setAnswer(''); 
     }
   };
 

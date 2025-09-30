@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 import { type RootState, type AppDispatch } from '@/app/store';
 import { fetchQuestion, submitAnswer, completeInterview } from '../features/interviewThunks';
-import { clearInterviewState } from '../features/interviewSlice'; // 1. Import the clear action
+import { clearInterviewState } from '../features/interviewSlice'; 
 import { ChatMessage } from './ChatMessage';
 import { InterviewTimer } from './InterviewTimer';
 import { AnswerInput } from './AnswerInput';
@@ -30,7 +30,6 @@ export function ChatWindow() {
     try {
       await dispatch(submitAnswer(answer)).unwrap();
       
-      // We get the index directly from the Redux state after it has been updated.
       const updatedIndex = (await store.getState()).interview.currentQuestionIndex;
 
       if (updatedIndex < 6) {
@@ -38,14 +37,11 @@ export function ChatWindow() {
       } else {
         toast.info("Interview finished!", { description: "Calculating your final results..." });
         
-        // --- THIS IS THE FIX ---
-        // 2. We call the simplified thunk.
         await dispatch(completeInterview()).unwrap();
 
-        // 3. After a short delay, we manually clear the state for the next visit.
         setTimeout(() => {
           dispatch(clearInterviewState());
-        }, 3000); // 3-second delay for the user to see the success screen
+        }, 3000); 
       }
     } catch (error) {
       console.error("Failed to submit answer or complete interview:", error);

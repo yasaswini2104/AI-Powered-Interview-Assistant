@@ -1,4 +1,3 @@
-// client\src\components\WelcomeBackModal.tsx
 import {
   Dialog,
   DialogContent,

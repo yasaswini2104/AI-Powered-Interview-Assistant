@@ -1,12 +1,9 @@
-// server\services\openaiService.js
 import https from 'https';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const API_KEY = process.env.GOOGLE_API_KEY;
-// --- THIS IS THE FINAL FIX ---
-// We are changing the model name to the standard, globally available version.
 const MODEL_NAME = 'gemini-2.5-flash-lite';
 
 const callGoogleAI = (payload) => {
@@ -32,10 +29,8 @@ const callGoogleAI = (payload) => {
             console.error("Error from Google AI API:", parsedData.error.message);
             return reject(new Error(parsedData.error.message));
           }
-          // Handle cases where the API returns no candidates
           if (!parsedData.candidates || parsedData.candidates.length === 0) {
             console.error("Google AI returned no candidates. Response:", data);
-            // This can happen if the prompt is blocked for safety reasons.
             return reject(new Error("AI response was empty or blocked."));
           }
           const textContent = parsedData.candidates[0].content.parts[0].text;
@@ -52,8 +47,6 @@ const callGoogleAI = (payload) => {
     req.end();
   });
 };
-
-// The rest of the functions remain the same
 export const generateQuestion = async (role, difficulty, history) => {
   const prompt = `Generate one ${difficulty}-level interview question for a ${role}. Previously asked: ${history.join(', ')}. Ensure it's unique. Respond with only the question text.`;
   const payload = { contents: [{ parts: [{ text: prompt }] }] };
@@ -99,4 +92,3 @@ Your evaluation must be ONLY a valid JSON object in the following format:
   const cleanedJson = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
   return JSON.parse(cleanedJson);
 };
-

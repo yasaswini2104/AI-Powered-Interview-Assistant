@@ -1,9 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { fetchAllCandidates } from './candidatesThunks';
-// 1. Import the 'completeInterview' thunk from the other file.
 import { completeInterview } from './interviewThunks';
 
-// Define the types for this slice's state
 export interface InterviewEntry {
   question: string; answer?: string; score?: number; feedback?: string; skillTags?: string[];
 }
@@ -35,11 +33,7 @@ const candidatesSlice = createSlice({
         state.candidates = action.payload;
       })
       .addCase(fetchAllCandidates.rejected, (state, action) => { state.status = 'failed'; state.error = action.payload as string; })
-      // --- THIS IS THE FIX ---
-      // 2. This slice now also listens for the 'completeInterview.fulfilled' action.
       .addCase(completeInterview.fulfilled, (state, action: PayloadAction<Candidate>) => {
-        // It takes the final candidate data from the action's payload
-        // and adds it to the beginning of the dashboard list for instant UI feedback.
         state.candidates.unshift(action.payload);
       });
   },

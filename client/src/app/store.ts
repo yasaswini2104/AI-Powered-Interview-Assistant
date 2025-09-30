@@ -1,11 +1,12 @@
-// client\src\app\store.ts
 import { configureStore, combineReducers } from '@reduxjs/toolkit'; 
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import authReducer from '../features/authSlice';
 import interviewReducer from '../features/interviewSlice';
-import candidatesReducer from '../features/candidatesSlice'; 
-// Combine the reducers
+import candidatesReducer from '../features/candidatesSlice';
+
 const rootReducer = combineReducers({
+  auth: authReducer,
   interview: interviewReducer,
   candidates: candidatesReducer, 
 });
@@ -13,9 +14,12 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   storage,
+  // We only want to persist the 'interview' slice for session resumption.
+  // 'auth' is handled by localStorage directly in its slice.
   whitelist: ['interview'],
 };
 
+// 2. We create the persisted reducer.
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
@@ -30,6 +34,8 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-export type RootState = ReturnType<typeof store.getState>;
+// 3. We define our RootState based on the ORIGINAL, un-persisted rootReducer.
+// This gives us the clean state type that our components expect.
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;
 
