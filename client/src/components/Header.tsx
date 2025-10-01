@@ -1,3 +1,4 @@
+// client\src\components\Header.tsx
 import { useSelector, useDispatch } from 'react-redux';
 import { type RootState, type AppDispatch } from '@/app/store';
 import { logout } from '@/features/authSlice';

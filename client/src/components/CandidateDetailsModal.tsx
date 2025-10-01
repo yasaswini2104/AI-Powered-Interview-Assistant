@@ -1,3 +1,4 @@
+// client\src\components\CandidateDetailsModal.tsx
 import { type Candidate } from '../features/candidatesSlice';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ export function CandidateDetailsModal({ candidate, onClose }: CandidateDetailsMo
   if (!candidate) return null;
 
   const verdictTheme = getVerdictTheme(candidate.recommendation?.verdict);
+  const isTrialMode = candidate._id?.startsWith('trial-');
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -37,11 +39,16 @@ export function CandidateDetailsModal({ candidate, onClose }: CandidateDetailsMo
             <Badge variant={candidate.finalScore > 7 ? 'default' : 'destructive'}>
               Final Score: {candidate.finalScore.toFixed(1)}
             </Badge>
+            {isTrialMode && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
+                Trial Mode
+              </Badge>
+            )}
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto mt-4 pr-4 space-y-4">
-            {/* Display the new recommendation */}
+            {/* Display the recommendation */}
             {candidate.recommendation && (
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <h3 className="font-bold text-lg mb-2 flex items-center">
@@ -54,24 +61,32 @@ export function CandidateDetailsModal({ candidate, onClose }: CandidateDetailsMo
             )}
 
             {/* AI Summary & Insights Section */}
-            <div className="p-4 bg-slate-50 rounded-lg border">
-                <h3 className="font-bold text-lg mb-2 flex items-center"><Lightbulb className="mr-2 h-5 w-5 text-yellow-500"/>AI Summary & Insights</h3>
-                <p className="text-slate-700 mb-4">{candidate.summary}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <h4 className="font-semibold flex items-center text-green-700"><ThumbsUp className="mr-2 h-4 w-4"/>Strengths</h4>
-                        <ul className="list-disc list-inside mt-1 text-slate-600 space-y-1">
-                            {candidate.insights.strengths.map((s, i) => <li key={`s-${i}`}>{s}</li>)}
-                        </ul>
+            {candidate.summary && (
+              <div className="p-4 bg-slate-50 rounded-lg border">
+                  <h3 className="font-bold text-lg mb-2 flex items-center"><Lightbulb className="mr-2 h-5 w-5 text-yellow-500"/>AI Summary & Insights</h3>
+                  <p className="text-slate-700 mb-4">{candidate.summary}</p>
+                  {candidate.insights && (candidate.insights.strengths.length > 0 || candidate.insights.weaknesses.length > 0) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {candidate.insights.strengths.length > 0 && (
+                          <div>
+                              <h4 className="font-semibold flex items-center text-green-700"><ThumbsUp className="mr-2 h-4 w-4"/>Strengths</h4>
+                              <ul className="list-disc list-inside mt-1 text-slate-600 space-y-1">
+                                  {candidate.insights.strengths.map((s, i) => <li key={`s-${i}`}>{s}</li>)}
+                              </ul>
+                          </div>
+                        )}
+                        {candidate.insights.weaknesses.length > 0 && (
+                          <div>
+                              <h4 className="font-semibold flex items-center text-red-700"><ThumbsDown className="mr-2 h-4 w-4"/>Areas for Improvement</h4>
+                              <ul className="list-disc list-inside mt-1 text-slate-600 space-y-1">
+                                  {candidate.insights.weaknesses.map((w, i) => <li key={`w-${i}`}>{w}</li>)}
+                              </ul>
+                          </div>
+                        )}
                     </div>
-                    <div>
-                        <h4 className="font-semibold flex items-center text-red-700"><ThumbsDown className="mr-2 h-4 w-4"/>Areas for Improvement</h4>
-                        <ul className="list-disc list-inside mt-1 text-slate-600 space-y-1">
-                            {candidate.insights.weaknesses.map((w, i) => <li key={`w-${i}`}>{w}</li>)}
-                        </ul>
-                    </div>
-                </div>
-            </div>
+                  )}
+              </div>
+            )}
 
             {/* Full Transcript Section */}
             <div>
@@ -82,6 +97,11 @@ export function CandidateDetailsModal({ candidate, onClose }: CandidateDetailsMo
                             <ChatMessage role="ai" content={entry.question} />
                             {entry.answer && <ChatMessage role="user" content={entry.answer} />}
                             {entry.feedback && <ChatMessage role="feedback" content={`Feedback: ${entry.feedback}`} />}
+                            {entry.score !== undefined && entry.score > 0 && (
+                              <div className="text-sm text-slate-600 pl-12">
+                                Score: <strong>{entry.score}/10</strong>
+                              </div>
+                            )}
                         </div>
                     ))}
                 </div>

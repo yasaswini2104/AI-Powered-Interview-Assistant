@@ -1,3 +1,4 @@
+// client\src\lib\pdfGenerator.ts
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import React from 'react';

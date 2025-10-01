@@ -1,3 +1,4 @@
+// client\src\components\MissingInfoForm.tsx
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export function MissingInfoForm() {
   const [formData, setFormData] = useState({ name: name || '', email: email || '', phone: phone || '' });
   const [isLoading, setIsLoading] = useState(false);
 
+  // Check if this is trial mode
   const isTrialMode = !userInfo && candidateId?.startsWith('trial-');
 
   useEffect(() => {
@@ -30,22 +32,31 @@ export function MissingInfoForm() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setIsLoading(true);
-
-    try {
-      if (isTrialMode) {
-        await new Promise(resolve => setTimeout(resolve, 500)); 
-        dispatch(updateInfoSuccess({
+    
+    // Trial mode: Just update Redux state locally, no API call
+    if (isTrialMode) {
+      try {
+        const updatedCandidate = {
           _id: candidateId!,
-          ...formData,
-          role
-        }));
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          role: role, // Use the role from Redux state
+        };
+        dispatch(updateInfoSuccess(updatedCandidate));
         toast.success("Information saved!", { description: "Your trial interview will now begin." });
-      } else {
-        const response = await apiClient.patch(`/candidates/${candidateId}`, formData);
-        dispatch(updateInfoSuccess(response.data.candidate));
-        toast.success("Information saved!", { description: "Your interview will now begin." });
+      } catch {
+        toast.error('Failed to save information', { description: 'Please try again.' });
       }
+      return;
+    }
+
+    // Authenticated mode: Update via API
+    setIsLoading(true);
+    try {
+      const response = await apiClient.patch(`/candidates/${candidateId}`, formData);
+      dispatch(updateInfoSuccess(response.data.candidate));
+      toast.success("Information saved!", { description: "Your interview will now begin." });
     } catch (error) {
       console.error('Update failed:', error);
       let errorMessage = 'An unexpected error occurred.';
@@ -64,7 +75,7 @@ export function MissingInfoForm() {
         <CardTitle className="text-2xl">Complete Your Profile</CardTitle>
         <CardDescription>
           {isTrialMode 
-            ? "Fill in your details to continue the trial interview." 
+            ? "Fill in your details to continue the trial interview. This data is stored locally." 
             : "Please fill in the missing details to proceed."}
         </CardDescription>
       </CardHeader>

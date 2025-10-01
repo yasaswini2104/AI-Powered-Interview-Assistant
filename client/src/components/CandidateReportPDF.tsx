@@ -1,3 +1,4 @@
+// client\src\components\CandidateReportPDF.tsx
 import { type Candidate } from '../features/candidatesSlice';
 
 export function CandidateReportPDF({ candidate }: { candidate: Candidate }) {

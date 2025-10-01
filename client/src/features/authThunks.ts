@@ -1,3 +1,4 @@
+// client\src\features\authThunks.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import apiClient from '../api/axios';
 import { setCredentials } from './authSlice';

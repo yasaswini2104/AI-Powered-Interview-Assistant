@@ -1,3 +1,4 @@
+// client\src\features\authSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { register, login } from './authThunks'; 
 

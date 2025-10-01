@@ -1,3 +1,4 @@
+// client\src\components\InterviewerDashboard.tsx
 import { useEffect, useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { type RootState, type AppDispatch } from '@/app/store';
@@ -36,17 +37,26 @@ export function InterviewerDashboard() {
   // In trial mode, show the local completed interview from Redux state
   const trialModeCandidate = useMemo(() => {
     if (isTrialMode && interviewState.status === 'completed' && interviewState.candidateId) {
-      // Convert the interview state into a Candidate object
+      // Calculate average score from interview history
+      const totalScore = interviewState.history.reduce((acc, entry) => acc + (entry.score || 0), 0);
+      const avgScore = interviewState.history.length > 0 ? totalScore / interviewState.history.length : 0;
+      
+      // Convert the interview state into a Candidate object with ALL required fields
       return {
         _id: interviewState.candidateId,
         name: interviewState.name || 'Trial User',
-        email: interviewState.email || 'N/A',
+        email: interviewState.email || 'trial@example.com',
+        phone: interviewState.phone || 'N/A', // ADD PHONE
         role: interviewState.role,
-        finalScore: 0, 
-        summary: 'Trial mode - data stored locally',
+        finalScore: parseFloat(avgScore.toFixed(2)),
+        summary: interviewState.finalSummary?.summary || 'Trial mode - Sign up to get AI-powered insights!',
         status: 'completed' as const,
         interviewHistory: interviewState.history,
-        insights: { strengths: [], weaknesses: [] },
+        insights: interviewState.finalSummary?.insights || { strengths: [], weaknesses: [] },
+        recommendation: interviewState.finalSummary?.recommendation || { 
+          verdict: 'Trial Mode', 
+          justification: 'Complete your sign-up to get detailed recommendations' 
+        },
         createdAt: new Date().toISOString(),
       };
     }

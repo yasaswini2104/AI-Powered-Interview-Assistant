@@ -1,3 +1,4 @@
+// server\middleware\errorMiddleware.js
 /**
  * @description Handles requests for routes that do not exist.
  */

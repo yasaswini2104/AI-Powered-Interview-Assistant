@@ -1,3 +1,4 @@
+// server\controllers\sessionController.js
 import InterviewSession from '../models/InterviewSession.js';
 
 // @desc    Create a new interview session

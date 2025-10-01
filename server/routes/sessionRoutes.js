@@ -1,3 +1,4 @@
+// server\routes\sessionRoutes.js
 import express from 'express';
 import { createSession, getSessionById } from '../controllers/sessionController.js';
 import { protect } from '../middleware/authMiddleware.js';

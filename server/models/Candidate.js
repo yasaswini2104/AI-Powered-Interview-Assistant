@@ -11,20 +11,18 @@ const interviewEntrySchema = new mongoose.Schema({
 
 const candidateSchema = new mongoose.Schema(
   {
-    // --- THIS IS THE CRITICAL FIELD ---
-    // This links the interview session to a specific user (either an individual or a recruiter)
     user: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
-      ref: 'User', // This creates a reference to our User model
+      ref: 'User',
     },
     name: { type: String },
     email: {
       type: String,
-      unique: true,
       lowercase: true,
       trim: true,
-      sparse: true,
+      // REMOVED: unique: true - Now allows multiple interviews with same email
+      // REMOVED: sparse: true
     },
     phone: { type: String },
     status: {
@@ -51,4 +49,3 @@ const candidateSchema = new mongoose.Schema(
 const Candidate = mongoose.model('Candidate', candidateSchema);
 
 export default Candidate;
-

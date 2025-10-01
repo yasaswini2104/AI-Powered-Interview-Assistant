@@ -1,3 +1,4 @@
+// client\src\components\InterviewTimer.tsx
 import { useState, useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Clock } from 'lucide-react';

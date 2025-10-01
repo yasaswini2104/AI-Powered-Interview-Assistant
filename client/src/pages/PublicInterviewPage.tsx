@@ -1,3 +1,4 @@
+// client\src\pages\PublicInterviewPage.tsx
 import { useEffect, useState } from 'react';
 import apiClient from '@/api/axios';
 import { IntervieweeView } from '@/components/IntervieweeView';

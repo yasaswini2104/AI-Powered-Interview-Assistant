@@ -1,4 +1,4 @@
-
+// client\src\components\ChatMessage.tsx
 import { Bot, User, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils'; 
 

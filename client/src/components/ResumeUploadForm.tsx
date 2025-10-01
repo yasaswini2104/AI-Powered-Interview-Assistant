@@ -1,3 +1,4 @@
+// client\src\components\ResumeUploadForm.tsx
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
@@ -42,19 +43,21 @@ export function ResumeUploadForm({ isPublicSession, sessionId, publicRole }: { i
     formData.append('resume', file);
     formData.append('role', finalRole);
 
+    // TRIAL MODE vs AUTHENTICATED MODE
     const isTrialMode = !userInfo && !isPublicSession;
 
     if (isTrialMode) {
+      // TRIAL MODE: Create candidate and collect profile details via form
       try {
-        const mockCandidate = {
+        const trialCandidate = {
           _id: `trial-${Date.now()}`,
-          name: null, 
-          email: null,
-          phone: null,
+          name: null, // Will be collected via MissingInfoForm
+          email: null, // Will be collected via MissingInfoForm
+          phone: null, // Will be collected via MissingInfoForm
           role: finalRole,
         };
         
-        dispatch(startInterviewSuccess(mockCandidate));
+        dispatch(startInterviewSuccess(trialCandidate));
         toast.success('Trial Mode', { description: "Your data will be stored locally. Sign up to save across devices!" });
       } catch {
         toast.error('Upload Failed', { description: 'An error occurred processing your file.' });
@@ -64,6 +67,7 @@ export function ResumeUploadForm({ isPublicSession, sessionId, publicRole }: { i
       return;
     }
 
+    // AUTHENTICATED MODE: Send to server
     let url = '/candidates/start';
     if (isPublicSession) {
         url = '/candidates/start/public';

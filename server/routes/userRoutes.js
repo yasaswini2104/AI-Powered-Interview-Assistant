@@ -1,3 +1,4 @@
+// server\routes\userRoutes.js
 import express from 'express';
 import { registerUser, loginUser } from '../controllers/userController.js';
 import { check } from 'express-validator';

@@ -1,3 +1,4 @@
+// client\src\components\IntervieweeView.tsx
 import { useSelector } from 'react-redux';
 import { type RootState } from '@/app/store';
 import { ResumeUploadForm } from './ResumeUploadForm';
